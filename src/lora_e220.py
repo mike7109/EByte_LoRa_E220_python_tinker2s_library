@@ -40,40 +40,17 @@ from lora_e220_constants import UARTParity, UARTBaudRate, TransmissionPower, Fix
 from lora_e220_operation_constant import ResponseStatusCode, ModeType, ProgramCommand, SerialUARTBaudRate, \
     PacketLength, RegisterAddress
 
-import re
-import time
 import json
 import gpiod
+import serial
+import time
+import logging
 
-
-class Logger:
-    def __init__(self, enable_debug):
-        self.enable_debug = enable_debug
-        self.name = ''
-
-    def debug(self, msg, *args):
-        if self.enable_debug:
-            print(self.name, ' DEBUG ', msg, *args)
-
-    def info(self, msg, *args):
-        if self.enable_debug:
-            print(self.name, ' INFO ', msg, *args)
-
-    def error(self, msg, *args):
-        if self.enable_debug:
-            print(self.name, ' ERROR ', msg, *args)
-
-    def getLogger(self, name):
-        self.name = name
-        return Logger(self.enable_debug)
-
-
-logging = Logger(False)
-
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BROADCAST_ADDRESS = 0xFF
-
 
 class Speed:
     def __init__(self, model):
@@ -317,39 +294,44 @@ class ModuleInformation:
 
 
 class LoRaE220:
-    # now the constructor that receive directly the UART object
-    class LoRaE220:
-        def __init__(self, model, uart, aux_pin=None, m0_pin=None, m1_pin=None):
-            self.uart = uart
-            self.model = model
+    def __init__(self, model, uart_port, aux_pin=None, m0_pin=None, m1_pin=None):
+        self.uart = serial.Serial(
+            port=uart_port,
+            baudrate=9600,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS,
+            timeout=1
+        )
+        self.model = model
 
-            self.aux_pin = aux_pin
-            self.m0_pin = m0_pin
-            self.m1_pin = m1_pin
+        self.aux_pin = aux_pin
+        self.m0_pin = m0_pin
+        self.m1_pin = m1_pin
 
-            # Инициализация чипа GPIO
-            self.chip = gpiod.Chip('gpiochip0')
+        # Инициализация чипа GPIO
+        self.chip = gpiod.Chip('gpiochip0')
 
-            # Инициализация линий GPIO
-            self.lines = {}
+        # Инициализация линий GPIO
+        self.lines = {}
 
-            try:
-                if self.aux_pin is not None:
-                    self.lines['aux'] = self.chip.get_line(self.aux_pin)
-                    self.lines['aux'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_IN)
+        try:
+            if self.aux_pin is not None:
+                self.lines['aux'] = self.chip.get_line(self.aux_pin)
+                self.lines['aux'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_IN)
 
-                if self.m0_pin is not None:
-                    self.lines['m0'] = self.chip.get_line(self.m0_pin)
-                    self.lines['m0'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_OUT)
-                    self.lines['m0'].set_value(1)  # Устанавливаем высокий уровень по умолчанию
+            if self.m0_pin is not None:
+                self.lines['m0'] = self.chip.get_line(self.m0_pin)
+                self.lines['m0'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_OUT)
+                self.lines['m0'].set_value(1)  # Устанавливаем высокий уровень по умолчанию
 
-                if self.m1_pin is not None:
-                    self.lines['m1'] = self.chip.get_line(self.m1_pin)
-                    self.lines['m1'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_OUT)
-                    self.lines['m1'].set_value(1)  # Устанавливаем высокий уровень по умолчанию
-            except OSError as e:
-                logger.error(f"Ошибка инициализации GPIO: {e}")
-                raise
+            if self.m1_pin is not None:
+                self.lines['m1'] = self.chip.get_line(self.m1_pin)
+                self.lines['m1'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_OUT)
+                self.lines['m1'].set_value(1)  # Устанавливаем высокий уровень по умолчанию
+        except OSError as e:
+            logger.error(f"Ошибка инициализации GPIO: {e}")
+            raise
 
     def begin(self):
         # Установка режима по умолчанию (NORMAL)
@@ -701,3 +683,50 @@ class LoRaE220:
         except Exception as e:
             logger.error(f"Ошибка при завершении работы: {e}")
             return ResponseStatusCode.ERR_E220_DEINIT_UART_FAILED
+
+# Основной скрипт
+def main():
+    # Номера GPIO линий
+    AUX_PIN = 5    # Номер GPIO для AUX
+    M0_PIN = 6     # Номер GPIO для M0
+    M1_PIN = 13    # Номер GPIO для M1
+
+    # Создание экземпляра LoRaE220 с использованием serial0 (/dev/ttyS0)
+    lora = LoRaE220(
+        model='400T22D',
+        uart_port='/dev/ttyS0',
+        aux_pin=AUX_PIN,
+        m0_pin=M0_PIN,
+        m1_pin=M1_PIN
+    )
+
+    # Инициализация модуля
+    code = lora.begin()
+    if code != ResponseStatusCode.E220_SUCCESS:
+        logger.error(f"Ошибка инициализации: {code}")
+        return
+    else:
+        logger.info("Модуль успешно инициализирован")
+
+    try:
+        # Отправка сообщения
+        message = "Привет от Tinker Board!"
+        code = lora.send_transparent_message(message)
+        if code != ResponseStatusCode.E220_SUCCESS:
+            logger.error(f"Ошибка отправки сообщения: {code}")
+        else:
+            logger.info("Сообщение успешно отправлено")
+
+        # Получение сообщения
+        time.sleep(1)  # Задержка для ожидания ответа
+        code, received_message = lora.receive_message()
+        if code != ResponseStatusCode.E220_SUCCESS:
+            logger.error(f"Ошибка при получении сообщения: {code}")
+        else:
+            logger.info(f"Получено сообщение: {received_message.decode('utf-8')}")
+    finally:
+        # Завершение работы модуля
+        lora.end()
+
+if __name__ == "__main__":
+    main()
