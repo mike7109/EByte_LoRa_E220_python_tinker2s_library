@@ -399,7 +399,7 @@ class LoRaE220:
             else:
                 return ResponseStatusCode.ERR_E220_INVALID_PARAM
 
-        self.managed_delay(40)
+        self.managed_delay(100)
 
         res = self.wait_complete_response(1000)
         if res == ResponseStatusCode.E220_SUCCESS:
