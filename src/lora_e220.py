@@ -1,40 +1,3 @@
-#############################################################################################
-# EBYTE LoRa E220 Series for Raspberry Pi
-#
-# AUTHOR:  Renzo Mischianti
-# VERSION: 0.0.2
-#
-# This library is based on the work of:
-# https://www.mischianti.org/category/my-libraries/lora-e220-devices/
-#
-# This library implements the EBYTE LoRa E220 Series for Raspberry Pi.
-#
-# The MIT License (MIT)
-#
-# Copyright (c) 2019 Renzo Mischianti www.mischianti.org All right reserved.
-#
-# You may copy, alter and reuse this code in any way you like, but please leave
-# reference to www.mischianti.org in your comments if you redistribute this code.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#############################################################################################
-
 from lora_e220_constants import UARTParity, UARTBaudRate, TransmissionPower, FixedTransmission, AirDataRate, \
     OperatingFrequency, LbtEnableByte, WorPeriod, RssiEnableByte, RssiAmbientNoiseEnable, SubPacketSetting
 from lora_e220_operation_constant import ResponseStatusCode, ModeType, ProgramCommand, SerialUARTBaudRate, \
@@ -43,7 +6,56 @@ from lora_e220_operation_constant import ResponseStatusCode, ModeType, ProgramCo
 import re
 import time
 import json
-from RPi import GPIO
+import gpiod  # Импортируем библиотеку gpiod для управления GPIO
+
+
+# Добавляем класс GPIO, который использует gpiod
+class GPIO:
+    HIGH = 1
+    LOW = 0
+    IN = 'in'
+    OUT = 'out'
+    BCM = 'BCM'  # Это значение не используется в gpiod, но оставлено для совместимости
+
+    _chip = gpiod.Chip('gpiochip0')  # Используем gpiochip0, при необходимости измените на ваш чип
+    _lines = {}  # Хранение запрошенных линий
+
+    @staticmethod
+    def setmode(mode):
+        pass  # В gpiod не требуется установка режима
+
+    @staticmethod
+    def setup(pin, direction):
+        if pin in GPIO._lines:
+            # Если линия уже запрошена, освобождаем ее
+            GPIO._lines[pin].release()
+        line = GPIO._chip.get_line(pin)
+        if direction == GPIO.IN:
+            line.request(consumer='gpio_input', type=gpiod.LINE_REQ_DIR_IN)
+        elif direction == GPIO.OUT:
+            line.request(consumer='gpio_output', type=gpiod.LINE_REQ_DIR_OUT)
+        else:
+            raise ValueError("Invalid direction")
+        GPIO._lines[pin] = line
+
+    @staticmethod
+    def input(pin):
+        if pin not in GPIO._lines:
+            raise RuntimeError("Pin not set up")
+        return GPIO._lines[pin].get_value()
+
+    @staticmethod
+    def output(pin, value):
+        if pin not in GPIO._lines:
+            raise RuntimeError("Pin not set up")
+        GPIO._lines[pin].set_value(value)
+
+    @staticmethod
+    def cleanup():
+        for line in GPIO._lines.values():
+            line.release()
+        GPIO._lines.clear()
+        GPIO._chip.close()
 
 
 class Logger:
