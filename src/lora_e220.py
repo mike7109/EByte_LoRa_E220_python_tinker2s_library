@@ -17,7 +17,7 @@ class GPIO:
     OUT = 'out'
     BCM = 'BCM'  # Это значение не используется в gpiod, но оставлено для совместимости
 
-    _chip = gpiod.Chip('gpiochip0')  # Используем gpiochip0, при необходимости измените на ваш чип
+    _chip = gpiod.Chip('/dev/gpiochip0')  # Используем gpiochip0, при необходимости измените на ваш чип
     _lines = {}  # Хранение запрошенных линий
 
     @staticmethod
