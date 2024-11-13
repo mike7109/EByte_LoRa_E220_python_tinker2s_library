@@ -496,7 +496,7 @@ class LoRaE220:
         cmd = bytearray([cmd, addr, pl])
         size = self.uart.write(cmd)
 
-        self.managed_delay(1000)  # need to check
+        self.managed_delay(50)  # need to check
 
         return size != 2
 
