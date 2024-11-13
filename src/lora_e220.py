@@ -43,7 +43,7 @@ from lora_e220_operation_constant import ResponseStatusCode, ModeType, ProgramCo
 import re
 import time
 import json
-from RPi import GPIO
+import gpiod
 
 
 class Logger:
@@ -318,96 +318,79 @@ class ModuleInformation:
 
 class LoRaE220:
     # now the constructor that receive directly the UART object
-    def __init__(self, model, uart, aux_pin=None, m0_pin=None, m1_pin=None,
-                 gpio_mode=GPIO.BCM):
-        self.uart = uart
-        self.model = model
+    class LoRaE220:
+        def __init__(self, model, uart, aux_pin=None, m0_pin=None, m1_pin=None):
+            self.uart = uart
+            self.model = model
 
-        pattern = '^(230|400|900)(T|R|MM|M)(22|30)[SD]$'
+            self.aux_pin = aux_pin
+            self.m0_pin = m0_pin
+            self.m1_pin = m1_pin
 
-        model_regex = re.compile(pattern)
-        if not model_regex.match(model):
-            raise ValueError('Invalid model')
+            # Инициализация чипа GPIO
+            self.chip = gpiod.Chip('gpiochip0')
 
-        self.aux_pin = aux_pin
-        self.m0_pin = m0_pin
-        self.m1_pin = m1_pin
+            # Инициализация линий GPIO
+            self.lines = {}
 
-        self.uart_baudrate = uart.baudrate  # This value must 9600 for configuration
-        self.uart_parity = uart.parity  # This value must be the same of the module
-        self.uart_stop_bits = uart.stopbits  # This value must be the same of the module
+            try:
+                if self.aux_pin is not None:
+                    self.lines['aux'] = self.chip.get_line(self.aux_pin)
+                    self.lines['aux'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_IN)
 
-        self.gpio_mode = gpio_mode
-        self.mode = None
+                if self.m0_pin is not None:
+                    self.lines['m0'] = self.chip.get_line(self.m0_pin)
+                    self.lines['m0'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_OUT)
+                    self.lines['m0'].set_value(1)  # Устанавливаем высокий уровень по умолчанию
 
-    # model is like 433T20D or 433T27D or 433T30D or 868T20S or 868T27S or 868T30S
-    # def __init__(self, model, tx_pin, rx_pin, uart_id=0, aux_pin=None, m0_pin=None, m1_pin=None,
-    #              uart_baudrate=SerialUARTBaudRate.BPS_RATE_9600):
-    #     self.uart = machine.UART(uart_id, tx=tx_pin, rx=rx_pin)
-    #     super().__init__(model, self.uart, aux_pin, m0_pin, m1_pin, uart_baudrate)
+                if self.m1_pin is not None:
+                    self.lines['m1'] = self.chip.get_line(self.m1_pin)
+                    self.lines['m1'].request(consumer='lora_e220', type=gpiod.LINE_REQ_DIR_OUT)
+                    self.lines['m1'].set_value(1)  # Устанавливаем высокий уровень по умолчанию
+            except OSError as e:
+                logger.error(f"Ошибка инициализации GPIO: {e}")
+                raise
 
-    def begin(self, uart_parity=UARTParity.MODE_00_8N1):
-        if not self.uart.is_open:
-            self.uart.open()
+    def begin(self):
+        # Установка режима по умолчанию (NORMAL)
+        result = self.set_mode(ModeType.MODE_0_NORMAL)
+        if result != ResponseStatusCode.E220_SUCCESS:
+            logger.error("Ошибка установки режима NORMAL")
+            return result
+        logger.info("Модуль инициализирован в режиме NORMAL")
+        return ResponseStatusCode.E220_SUCCESS
 
-        self.uart.reset_input_buffer()
-        self.uart.reset_output_buffer()
-
-        GPIO.setmode(self.gpio_mode)
-
-        if self.aux_pin is not None:
-            GPIO.setup(self.aux_pin, GPIO.IN)
-        if self.m0_pin is not None and self.m1_pin is not None:
-            GPIO.setup(self.m0_pin, GPIO.OUT)
-            GPIO.setup(self.m1_pin, GPIO.OUT)
-            GPIO.output(self.m0_pin, GPIO.HIGH)
-            GPIO.output(self.m1_pin, GPIO.HIGH)
-
-        # self.uart.timeout(1000)
-
-        code = self.set_mode(ModeType.MODE_0_NORMAL)
-        if code != ResponseStatusCode.SUCCESS:
-            return code
-
-        return code
-
-    def set_mode(self, mode: ModeType) -> ResponseStatusCode:
-        self.managed_delay(40)
-
-        if self.m0_pin is None and self.m1_pin is None:
-            logger.debug(
-                "The M0 and M1 pins are not set, which means that you are connecting the pins directly as you need!")
+    def set_mode(self, mode):
+        if mode == ModeType.MODE_0_NORMAL:
+            self.lines['m0'].set_value(0)
+            self.lines['m1'].set_value(0)
+        elif mode == ModeType.MODE_1_WOR:
+            self.lines['m0'].set_value(1)
+            self.lines['m1'].set_value(0)
+        elif mode == ModeType.MODE_2_POWER_SAVING:
+            self.lines['m0'].set_value(0)
+            self.lines['m1'].set_value(1)
+        elif mode == ModeType.MODE_3_SLEEP:
+            self.lines['m0'].set_value(1)
+            self.lines['m1'].set_value(1)
         else:
-            if mode == ModeType.MODE_0_NORMAL:
-                # Mode 0 | normal operation
-                GPIO.output(self.m0_pin, GPIO.LOW)
-                GPIO.output(self.m1_pin, GPIO.LOW)
-                logger.debug("MODE NORMAL!")
-            elif mode == ModeType.MODE_1_WOR_TRANSMITTER:
-                # Mode 1 | wake-up operation
-                GPIO.output(self.m0_pin, GPIO.HIGH)
-                GPIO.output(self.m1_pin, GPIO.LOW)
-                logger.debug("MODE WOR TRANSMITTER!")
-            elif mode == ModeType.MODE_2_POWER_SAVING:
-                # Mode 2 | power saving operation
-                GPIO.output(self.m0_pin, GPIO.LOW)
-                GPIO.output(self.m1_pin, GPIO.HIGH)
-                logger.debug("MODE WOR RECEIVER!")
-            elif mode == ModeType.MODE_3_CONFIGURATION:
-                # Mode 3 | Setting operation
-                GPIO.output(self.m0_pin, GPIO.HIGH)
-                GPIO.output(self.m1_pin, GPIO.HIGH)
-                logger.debug("MODE PROGRAM!")
-            else:
-                return ResponseStatusCode.ERR_E220_INVALID_PARAM
+            return ResponseStatusCode.ERR_E220_INVALID_PARAM
 
-        self.managed_delay(40)
+        # Ожидание готовности модуля
+        result = self._wait_for_aux_high()
+        if result != ResponseStatusCode.E220_SUCCESS:
+            return result
+        time.sleep(0.05)  # Задержка для стабилизации
+        return ResponseStatusCode.E220_SUCCESS
 
-        res = self.wait_complete_response(1000)
-        if res == ResponseStatusCode.E220_SUCCESS:
-            self.mode = mode
-
-        return res
+    def _wait_for_aux_high(self, timeout=1):
+        start_time = time.time()
+        while self.lines['aux'].get_value() == 0:
+            if (time.time() - start_time) > timeout:
+                logger.error("Время ожидания AUX истекло")
+                return ResponseStatusCode.ERR_E220_TIMEOUT
+            time.sleep(0.01)  # Задержка для снижения нагрузки на CPU
+        return ResponseStatusCode.E220_SUCCESS
 
     @staticmethod
     def managed_delay(timeout):
@@ -416,25 +399,15 @@ class LoRaE220:
         while round(time.time()*1000) - t < timeout:
             pass
 
-    def wait_complete_response(self, timeout, wait_no_aux=100) -> ResponseStatusCode:
-        result = ResponseStatusCode.E220_SUCCESS
-        t = round(time.time()*1000)
-
-        if self.aux_pin is not None:
-            while GPIO.input(self.aux_pin) == 0:
-                if round(time.time()*1000) - t > timeout:
-                    result = ResponseStatusCode.ERR_E220_TIMEOUT
-                    logger.debug("Timeout error!")
-                    return result
-
-            logger.debug("AUX HIGH!")
-        else:
-            self.managed_delay(wait_no_aux)
-            logger.debug("Wait no AUX pin!")
-
-        self.managed_delay(20)
-        logger.debug("Complete!")
-        return result
+    def wait_complete_response(self, timeout):
+        start_time = time.time()
+        while self.lines['aux'].get_value() == 0:
+            if (time.time() - start_time) > (timeout / 1000):
+                logger.error("Время ожидания ответа истекло")
+                return ResponseStatusCode.ERR_E220_TIMEOUT
+            time.sleep(0.01)  # Задержка для снижения нагрузки на CPU
+        time.sleep(0.05)  # Дополнительная задержка после поднятия AUX
+        return ResponseStatusCode.E220_SUCCESS
 
     def check_UART_configuration(self, mode) -> ResponseStatusCode:
         if mode == ModeType.MODE_3_PROGRAM and self.uart_baudrate != SerialUARTBaudRate.BPS_RATE_9600:
@@ -714,14 +687,17 @@ class LoRaE220:
     def available(self) -> int:
         return self.uart.in_waiting
 
-    def end(self) -> ResponseStatusCode:
+    def end(self):
         try:
             if self.uart is not None:
                 self.uart.close()
                 del self.uart
-                GPIO.cleanup()
+            # Освобождение линий GPIO
+            for line in self.lines.values():
+                line.release()
+            logger.info("Модуль успешно завершил работу")
             return ResponseStatusCode.E220_SUCCESS
 
-        except Exception as E:
-            logger.error("Error: {}".format(E))
+        except Exception as e:
+            logger.error(f"Ошибка при завершении работы: {e}")
             return ResponseStatusCode.ERR_E220_DEINIT_UART_FAILED
