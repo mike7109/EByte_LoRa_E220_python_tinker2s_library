@@ -727,6 +727,14 @@ def main():
     else:
         print('Модуль успешно инициализирован')
 
+    print("Initialization: {}", ResponseStatusCode.get_description(code))
+
+    code, configuration = lora.get_configuration()
+
+    print("Retrieve configuration: {}", ResponseStatusCode.get_description(code))
+
+    print_configuration(configuration)
+
     # Отправляем тестовое сообщение
     message = 'Привет, мир!'
     code = lora.send_transparent_message(message)
