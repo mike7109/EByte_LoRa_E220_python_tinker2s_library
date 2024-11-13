@@ -7,6 +7,7 @@ import re
 import time
 import json
 import gpiod  # Импортируем библиотеку gpiod для управления GPIO
+import serial
 
 
 # Добавляем класс GPIO, который использует gpiod
@@ -737,3 +738,48 @@ class LoRaE220:
         except Exception as E:
             logger.error("Error: {}".format(E))
             return ResponseStatusCode.ERR_E220_DEINIT_UART_FAILED
+
+# Основной скрипт
+def main():
+    # Настройки UART
+    uart_port = '/dev/ttyS0'  # Замените на ваш порт UART
+    uart_baudrate = 9600
+
+    # Создаем объект UART
+    uart = serial.Serial(
+        port=uart_port,
+        baudrate=uart_baudrate,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        bytesize=serial.EIGHTBITS,
+        timeout=1
+    )
+
+    # Пины GPIO (номера пинов соответствуют номерам линий в gpiochip0)
+    aux_pin = 4  # Замените на ваш пин AUX
+    m0_pin = 17  # Замените на ваш пин M0
+    m1_pin = 27  # Замените на ваш пин M1
+
+    # Создаем объект LoRaE220
+    lora = LoRaE220('400T22D', uart, aux_pin=aux_pin, m0_pin=m0_pin, m1_pin=m1_pin)
+
+    # Инициализируем модуль
+    code = lora.begin()
+    if code != 0:
+        print(f'Ошибка инициализации: {code}')
+    else:
+        print('Модуль успешно инициализирован')
+
+    # Отправляем тестовое сообщение
+    message = 'Привет, мир!'
+    code = lora.send_transparent_message(message)
+    if code != 0:
+        print(f'Ошибка отправки сообщения: {code}')
+    else:
+        print('Сообщение успешно отправлено')
+
+    # Завершаем работу с модулем
+    lora.end()
+
+if __name__ == "__main__":
+    main()
