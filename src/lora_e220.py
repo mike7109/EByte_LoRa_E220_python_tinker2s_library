@@ -718,7 +718,7 @@ def main():
 
     # Создаем объект LoRaE220
     # lora = LoRaE220('400T22D', uart, aux_pin=aux_pin, m0_pin=m0_pin, m1_pin=m1_pin)
-    lora = LoRaE220('400T220', uart)
+    lora = LoRaE220('400T22D', uart)
 
     # Инициализируем модуль
     code = lora.begin()
