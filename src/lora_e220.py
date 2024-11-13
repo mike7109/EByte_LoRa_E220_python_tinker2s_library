@@ -735,7 +735,7 @@ class LoRaE220:
 # Основной скрипт
 def main():
     # Настройки UART
-    uart_port = '/dev/ttyS40'  # Замените на ваш порт UART
+    uart_port = '/dev/ttyS0'  # Замените на ваш порт UART
     uart_baudrate = 9600
 
     # Создаем объект UART
