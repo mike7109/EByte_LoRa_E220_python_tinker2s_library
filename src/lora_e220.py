@@ -43,7 +43,7 @@ from lora_e220_operation_constant import ResponseStatusCode, ModeType, ProgramCo
 import re
 import time
 import json
-from periphery import GPIO
+from periphery import GPIO  # Импортируем GPIO из python-periphery
 import serial
 
 class Logger:
@@ -749,9 +749,9 @@ def main():
     )
 
     # Пины GPIO (номера пинов соответствуют номерам линий в gpiochip0)
-    aux_pin = 84  # Замените на ваш пин AUX
-    m0_pin = 146  # Замените на ваш пин M0
-    m1_pin = 85  # Замените на ваш пин M1
+    aux_pin = 8  # Замените на ваш пин AUX
+    m0_pin = 73  # Замените на ваш пин M0
+    m1_pin = 74  # Замените на ваш пин M1
 
     # Создаем объект LoRaE220
     lora = LoRaE220('400T22D', uart, m0_pin=m0_pin, m1_pin=m1_pin)
