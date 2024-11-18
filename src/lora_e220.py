@@ -754,8 +754,8 @@ def main():
     m1_pin = 85  # Замените на ваш пин M1
 
     # Создаем объект LoRaE220
-    # lora = LoRaE220('400T22D', uart, m0_pin=m0_pin, m1_pin=m1_pin)
-    lora = LoRaE220('400T22D', uart, aux_pin=aux_pin, m0_pin=m0_pin, m1_pin=m1_pin)
+    lora = LoRaE220('400T22D', uart, m0_pin=m0_pin, m1_pin=m1_pin)
+    # lora = LoRaE220('400T22D', uart, aux_pin=aux_pin, m0_pin=m0_pin, m1_pin=m1_pin)
     # lora = LoRaE220('400T22D', uart)
 
     # Инициализируем модуль
