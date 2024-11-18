@@ -735,7 +735,7 @@ class LoRaE220:
 # Основной скрипт
 def main():
     # Настройки UART
-    uart_port = '/dev/ttyS0'  # Замените на ваш порт UART
+    uart_port = '/dev/ttyS4'  # Замените на ваш порт UART
     uart_baudrate = 9600
 
     # Создаем объект UART
@@ -758,9 +758,13 @@ def main():
     m0_pin_receiver = 149  # GPIO номер для M0
     m1_pin_receiver = 85  # GPIO номер для M1
 
+    aux_pin_sender = 121  # GPIO номер для AUX
+    m0_pin_sender = 73  # GPIO номер для M0
+    m1_pin_sender = 74  # GPIO номер для M1
+
     # Создаем объект LoRaE220
     # lora = LoRaE220('400T22D', uart, m0_pin=m0_pin, m1_pin=m1_pin)
-    lora = LoRaE220('400T22D', uart, aux_pin=aux_pin_receiver, m0_pin=m0_pin_receiver, m1_pin=m1_pin_receiver)
+    lora = LoRaE220('400T22D', uart, aux_pin=aux_pin_sender, m0_pin=m0_pin_sender, m1_pin=m1_pin_sender)
     # lora = LoRaE220('400T22D', uart)
 
     # Инициализируем модуль
