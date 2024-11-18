@@ -33,11 +33,13 @@ else:
 
 # Ожидаем и принимаем сообщение
 print('Ожидание сообщения...')
-code, message = lora_receiver.receive_message()
-if code != ResponseStatusCode.E220_SUCCESS:
-    print(f'Ошибка приема сообщения: {code}')
-else:
-    print(f'Получено сообщение: {message}')
+while True:
+    if lora_receiver.available() > 0:
+        code, value = lora_receiver.receive_message()
+        print(ResponseStatusCode.get_description(code))
+
+        print(value)
+        time.sleep(2)
 
 # Завершаем работу с модулем приемника
 lora_receiver.end()
