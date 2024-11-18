@@ -17,7 +17,7 @@ uart_sender = serial.Serial(
 )
 
 # GPIO номера для отправителя (замените на ваши номера пинов)
-aux_pin_sender = 35   # GPIO номер для AUX
+aux_pin_sender = 121   # GPIO номер для AUX
 m0_pin_sender = 73   # GPIO номер для M0
 m1_pin_sender = 74   # GPIO номер для M1
 
