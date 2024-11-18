@@ -43,7 +43,7 @@ from lora_e220_operation_constant import ResponseStatusCode, ModeType, ProgramCo
 import re
 import time
 import json
-from periphery import GPIO  # Импортируем GPIO из python-periphery
+from periphery import GPIO
 import serial
 
 class Logger:
