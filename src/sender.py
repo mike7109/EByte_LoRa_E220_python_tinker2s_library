@@ -5,7 +5,7 @@ from lora_e220_constants import RssiAmbientNoiseEnable, RssiEnableByte
 from lora_e220_operation_constant import ResponseStatusCode
 
 # Настройки UART для отправителя
-uart_port_sender = '/dev/ttyS4'  # Замените на ваш порт UART для отправителя
+uart_port_sender = '/dev/ttyS0'  # Замените на ваш порт UART для отправителя
 uart_baudrate = 9600
 
 # Создаем объект UART для отправителя
@@ -19,9 +19,9 @@ uart_sender = serial.Serial(
 )
 
 # GPIO номера для отправителя (замените на ваши номера пинов)
-aux_pin_sender = 121   # GPIO номер для AUX
-m0_pin_sender = 73   # GPIO номер для M0
-m1_pin_sender = 74   # GPIO номер для M1
+aux_pin_sender = 84   # GPIO номер для AUX
+m0_pin_sender = 86   # GPIO номер для M0
+m1_pin_sender = 87   # GPIO номер для M1
 
 # Создаем объект LoRaE220 для отправителя
 lora = LoRaE220('400T22D', uart_sender, m0_pin=m0_pin_sender, m1_pin=m1_pin_sender, aux_pin=aux_pin_sender)

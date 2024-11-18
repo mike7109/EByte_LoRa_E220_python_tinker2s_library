@@ -6,7 +6,7 @@ from lora_e220_operation_constant import ResponseStatusCode
 from lora_e220_constants import FixedTransmission, RssiEnableByte
 
 # Настройки UART для приемника
-uart_port_receiver = '/dev/ttyS0'  # Замените на ваш порт UART для приемника
+uart_port_receiver = '/dev/ttyS4'  # Замените на ваш порт UART для приемника
 uart_baudrate = 9600
 
 # Создаем объект UART для приемника
@@ -20,9 +20,9 @@ uart_receiver = serial.Serial(
 )
 
 # GPIO номера для приемника (замените на ваши номера пинов)
-aux_pin_receiver = 84   # GPIO номер для AUX
-m0_pin_receiver = 149   # GPIO номер для M0
-m1_pin_receiver = 85   # GPIO номер для M1
+aux_pin_receiver = 121   # GPIO номер для AUX
+m0_pin_receiver = 73   # GPIO номер для M0
+m1_pin_receiver = 74   # GPIO номер для M1
 
 # Создаем объект LoRaE220 для приемника
 lora = LoRaE220('400T22D', uart_receiver, aux_pin=aux_pin_receiver, m0_pin=m0_pin_receiver, m1_pin=m1_pin_receiver)
