@@ -1,6 +1,8 @@
 import serial
-import time
-from lora_e220 import LoRaE220, UARTParity, UARTBaudRate, ResponseStatusCode
+
+from lora_e220 import LoRaE220, Configuration
+from lora_e220_constants import RssiAmbientNoiseEnable, RssiEnableByte
+from lora_e220_operation_constant import ResponseStatusCode
 
 # Настройки UART для отправителя
 uart_port_sender = '/dev/ttyS0'  # Замените на ваш порт UART для отправителя
@@ -22,22 +24,20 @@ m0_pin_sender = 73   # GPIO номер для M0
 m1_pin_sender = 74   # GPIO номер для M1
 
 # Создаем объект LoRaE220 для отправителя
-lora_sender = LoRaE220('400T22D', uart_sender, m0_pin=m0_pin_sender, m1_pin=m1_pin_sender)
+lora = LoRaE220('400T22D', uart_sender, m0_pin=m0_pin_sender, m1_pin=m1_pin_sender)
 
-# Инициализируем модуль отправителя
-code = lora_sender.begin()
-if code != ResponseStatusCode.E220_SUCCESS:
-    print(f'Ошибка инициализации отправителя: {code}')
-else:
-    print('Модуль отправителя успешно инициализирован')
+code = lora.begin()
+print("Initialization: {}", ResponseStatusCode.get_description(code))
 
-# Отправляем тестовое сообщение
-message = 'Привет от отправителя!'
-code = lora_sender.send_transparent_message(message)
-if code != ResponseStatusCode.E220_SUCCESS:
-    print(f'Ошибка отправки сообщения: {code}')
-else:
-    print('Сообщение успешно отправлено')
+# Set the configuration to default values and print the updated configuration to the console
+# Not needed if already configured
+configuration_to_set = Configuration('400T22D')
+# To enable RSSI, you must also enable RSSI on receiver
+configuration_to_set.TRANSMISSION_MODE.enableRSSI = RssiEnableByte.RSSI_ENABLED
+code, confSetted = lora.set_configuration(configuration_to_set)
+print("Set configuration: {}", ResponseStatusCode.get_description(code))
 
-# Завершаем работу с модулем отправителя
-lora_sender.end()
+# Send a string message (transparent)
+message = 'Hello, world!'
+code = lora.send_transparent_message(message)
+print("Send message: {}", ResponseStatusCode.get_description(code))
