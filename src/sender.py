@@ -24,7 +24,7 @@ m0_pin_sender = 73   # GPIO номер для M0
 m1_pin_sender = 74   # GPIO номер для M1
 
 # Создаем объект LoRaE220 для отправителя
-lora = LoRaE220('400T22D', uart_sender, m0_pin=m0_pin_sender, m1_pin=m1_pin_sender)
+lora = LoRaE220('400T22D', uart_sender, m0_pin=m0_pin_sender, m1_pin=m1_pin_sender, aux_pin=aux_pin_sender)
 
 code = lora.begin()
 print("Initialization: {}", ResponseStatusCode.get_description(code))
