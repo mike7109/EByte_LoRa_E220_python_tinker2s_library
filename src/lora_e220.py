@@ -759,8 +759,8 @@ def main():
     m1_pin_receiver = 85  # GPIO номер для M1
 
     aux_pin_sender = 121  # GPIO номер для AUX
-    m0_pin_sender = 73  # GPIO номер для M0
-    m1_pin_sender = 74  # GPIO номер для M1
+    m0_pin_sender = 86  # GPIO номер для M0
+    m1_pin_sender = 87  # GPIO номер для M1
 
     # Создаем объект LoRaE220
     # lora = LoRaE220('400T22D', uart, m0_pin=m0_pin, m1_pin=m1_pin)
