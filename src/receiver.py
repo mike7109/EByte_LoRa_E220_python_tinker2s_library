@@ -34,10 +34,10 @@ print("Initialization: {}", ResponseStatusCode.get_description(code))
 # Set the configuration to default values and print the updated configuration to the console
 # Not needed if already configured
 configuration_to_set = Configuration('400T22D')
-configuration_to_set.ADDH = 0x00 # Address of this receive no sender
-configuration_to_set.ADDL = 0x01 # Address of this receive no sender
-configuration_to_set.CHAN = 23 # Address of this receive no sender
-configuration_to_set.TRANSMISSION_MODE.fixedTransmission = FixedTransmission.FIXED_TRANSMISSION
+# configuration_to_set.ADDH = 0x00 # Address of this receive no sender
+# configuration_to_set.ADDL = 0x01 # Address of this receive no sender
+# configuration_to_set.CHAN = 23 # Address of this receive no sender
+# configuration_to_set.TRANSMISSION_MODE.fixedTransmission = FixedTransmission.FIXED_TRANSMISSION
 # To enable RSSI, you must also enable RSSI on sender
 configuration_to_set.TRANSMISSION_MODE.enableRSSI = RssiEnableByte.RSSI_ENABLED
 
