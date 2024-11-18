@@ -8,7 +8,7 @@ import serial
 from lora_e220_constants import FixedTransmission, RssiEnableByte
 
 # Настройки UART для приемника
-uart_port_receiver = '/dev/ttyS4'  # Замените на ваш порт UART для приемника
+uart_port_receiver = '/dev/ttyS0'  # Замените на ваш порт UART для приемника
 uart_baudrate = 9600
 
 # Создаем объект UART для приемника
