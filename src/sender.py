@@ -17,9 +17,9 @@ uart_sender = serial.Serial(
 )
 
 # GPIO номера для отправителя (замените на ваши номера пинов)
-aux_pin_sender = 4   # GPIO номер для AUX
-m0_pin_sender = 17   # GPIO номер для M0
-m1_pin_sender = 27   # GPIO номер для M1
+aux_pin_sender = 8   # GPIO номер для AUX
+m0_pin_sender = 73   # GPIO номер для M0
+m1_pin_sender = 74   # GPIO номер для M1
 
 # Создаем объект LoRaE220 для отправителя
 lora_sender = LoRaE220('400T22D', uart_sender, aux_pin=aux_pin_sender, m0_pin=m0_pin_sender, m1_pin=m1_pin_sender)
