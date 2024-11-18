@@ -753,10 +753,15 @@ def main():
     m0_pin = 73  # Замените на ваш пин M0
     m1_pin = 74  # Замените на ваш пин M1
 
+    # GPIO номера для приемника (замените на ваши номера пинов)
+    # aux_pin_receiver = 84  # GPIO номер для AUX
+    # m0_pin_receiver = 149  # GPIO номер для M0
+    # m1_pin_receiver = 85  # GPIO номер для M1
+
     # Создаем объект LoRaE220
     # lora = LoRaE220('400T22D', uart, m0_pin=m0_pin, m1_pin=m1_pin)
-    # lora = LoRaE220('400T22D', uart, aux_pin=aux_pin, m0_pin=m0_pin, m1_pin=m1_pin)
-    lora = LoRaE220('400T22D', uart)
+    lora = LoRaE220('400T22D', uart, aux_pin=aux_pin, m0_pin=m0_pin, m1_pin=m1_pin)
+    # lora = LoRaE220('400T22D', uart)
 
     # Инициализируем модуль
     code = lora.begin()

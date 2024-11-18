@@ -5,7 +5,7 @@ from lora_e220_constants import RssiAmbientNoiseEnable, RssiEnableByte
 from lora_e220_operation_constant import ResponseStatusCode
 
 # Настройки UART для отправителя
-uart_port_sender = '/dev/ttyS0'  # Замените на ваш порт UART для отправителя
+uart_port_sender = '/dev/ttyS4'  # Замените на ваш порт UART для отправителя
 uart_baudrate = 9600
 
 # Создаем объект UART для отправителя
