@@ -1,6 +1,6 @@
 import serial
 import time
-from lora_e220 import LoRaE220, Configuration
+from lora_e220 import LoRaE220, Configuration, print_configuration
 from lora_e220_operation_constant import ResponseStatusCode
 
 from lora_e220_constants import FixedTransmission, RssiEnableByte
@@ -43,6 +43,11 @@ configuration_to_set.TRANSMISSION_MODE.enableRSSI = RssiEnableByte.RSSI_ENABLED
 
 code, confSetted = lora.set_configuration(configuration_to_set)
 print("Set configuration: {}", ResponseStatusCode.get_description(code))
+
+# Set the new configuration on the LoRa module and print the updated configuration to the console
+print("------------- CONFIGURATION AFTER CHANGE -------------")
+print(ResponseStatusCode.get_description(code))
+print_configuration(confSetted)
 
 print("Waiting for messages...")
 while True:
